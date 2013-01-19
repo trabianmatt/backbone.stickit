@@ -74,6 +74,13 @@ module.exports = function(grunt) {
       }
     },
 
+    watch: {
+      files: {
+        files: "backbone.stickit.js",
+        tasks: "lint qunit"
+      }
+    },
+
     clean: {
       build: ['dist'],
       docco: ['docs']
@@ -84,6 +91,8 @@ module.exports = function(grunt) {
   // https://github.com/gruntjs/grunt/issues/219
   grunt.registerTask('test', 'server qunit');
   
+  grunt.registerTask('run', 'server watch');
+
   grunt.registerTask('build', 'lint clean:build concat min docco cp-docs clean:docco compress');
   
   grunt.registerTask('cp-docs', function() {

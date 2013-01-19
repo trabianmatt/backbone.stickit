@@ -165,7 +165,7 @@
 				var $el, options, modelAttr, visibleCb,
 					config = bindings[selector] || {},
 					bindKey = _.uniqueId();
-				
+
 				// Support ':el' selector - special case selector for the view managed delegate.
 				if (selector != ':el') $el = self.$(selector);
 				else {
@@ -175,7 +175,7 @@
 
 				// Fail fast if the selector didn't match an element.
 				if (!$el.length) return false;
-		
+
 				// Allow shorthand setting of model attributes - `'selector':'observe'`.
 				if (_.isString(config)) config = {observe:config};
 
@@ -338,7 +338,7 @@
 
 		// If `visible` is a function then it should return a boolean result to show/hide.
 		if (_.isFunction(visible) || _.isString(visible)) isVisible = applyViewFn(context, visible, val, attrName);
-		
+
 		// Either use the custom `visibleFn`, if provided, or execute a standard jQuery show/hide.
 		if (visibleFn) applyViewFn(context, visibleFn, $el, isVisible, attrName);
 		else {
@@ -391,4 +391,4 @@
 		});
 	};
 
-})(window.jQuery || window.Zepto);
+})(Backbone.$);
