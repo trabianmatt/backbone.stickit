@@ -6,11 +6,9 @@
   
 	<link rel="stylesheet" href="vendor/qunit.css" type="text/css"/>  
 	
-	<script type="text/javascript" src="http://zeptojs.com/zepto.min.js"></script>
+	<!--script type="text/javascript" src="vendor/zepto.js"></script>
+	<script type="text/javascript" src="vendor/zepto-data.js"></script-->
 	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-	<script type="text/javascript">
-		jQuery.noConflict();
-	</script>
 	<script type="text/javascript" src="vendor/qunit.js"></script>  
 	<script type="text/javascript" src="vendor/underscore.js"></script> 
 	<script type="text/javascript" src="vendor/backbone.js"></script>
@@ -19,6 +17,7 @@
 	<script type="text/javascript" src="testScaffolding.js"></script>
 	<script type="text/javascript" src="bindData.js"></script>
 	<script type="text/javascript" src="modelBinding.js"></script>
+	<script type="text/javascript" src="addHandler.js"></script>
 </head>  
 	
 <body>  
@@ -69,6 +68,8 @@
 		<input type="number" class="test12-2">
 		<input type="number" class="test12-3">
 		<input type="number" class="test12-4">
+		<input type="number" class="test12-5">
+		<input type="number" class="test12-6">
 	</script>
 
 	<script id="jst13" type="text/jst">
@@ -104,6 +105,13 @@
 
 	<script id="jst19" type="text/jst">
 		<input type="checkbox" class="box" value="fountain">
+	</script>
+
+	<script id="jst20" type="text/jst">
+		<input class='trim'>
+		<input class='input'>
+		<textarea id="textarea"></textarea>
+		<div id="div"></div>
 	</script>
 
 </body>

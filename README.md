@@ -1,16 +1,16 @@
-[-> **Documentation for current/stable release: 0.6.1**](http://nytimes.github.com/backbone.stickit/)
+[-> **Documentation for current/stable release: 0.6.2**](http://nytimes.github.com/backbone.stickit/)
 
 **The following is documentation for the code in master/edge version...**
 
 ## Introduction
 
-Backbone.stickit is yet another model-view binding plugin for Backbone. Like the other plugins, Stickit will wire up bindings that will keep form elements, innerHTML, text, and attribute values bound with model attributes. 
+Backbone's philosophy is for a View, the display of a Model's state, to re-render after any changes have been made to the Model. This works beautifully for simple apps, but rich apps often need to render, respond, and synchronize changes with finer granularity.
 
-Stickit differs, however, in that it is a more natural fit with Backbone's style and functionality. Stickit has a simple and intuitive configuration, which, like Backbone, stays out of the view html; in fact, Stickit will clean up your templates, as you will need to interpolate fewer variables (if any at all) while rendering. Also, stickit internally leverages the `view.events` object so delegating, undelegating, and removing bindings will be seamless in the lifetime of a Backbone view. 
+Stickit is a Backbone data binding plugin that binds Model attributes to View elements with a myriad of options for fine-tuning a rich app experience. Unlike most model binding plugins, Stickit does not require any extra markup in your html; in fact, Stickit will clean up your templates, as you will need to interpolate fewer variables (if any at all) while rendering. In Backbone style, Stickit has a simple and flexible api which plugs in nicely to a View's lifecycle.
 
 ## Download + Source
 
-[download v0.6.1](http://nytimes.github.com/backbone.stickit/downloads/backbone.stickit_0.6.1.zip)
+[download v0.6.2](http://nytimes.github.com/backbone.stickit/downloads/backbone.stickit_0.6.2.zip)
 
 [download master/edge](https://raw.github.com/NYTimes/backbone.stickit/master/backbone.stickit.js)
 
@@ -43,7 +43,7 @@ On the initial call, stickit will initialize the innerHTML of `view.$('#title')`
 ### stickit
 `view.stickit(optionalModel, optionalBindingsConfig)`
 
-Uses `view.bindings` or the given bindings, and `this.model` or the given model, to setup bindings. Stickit can be called more than once with different models and binding configurations. Note: multiple models can be bound to a view, but any subsequent attempts to bind a previously bound model will delete the previous bindings for (only) that model.
+Uses `view.bindings` and `view.model` to setup bindings. Optionally, you can pass in a model and bindings hash. Note: you can only bind to a model once, any subsequent attempts to bind a previously bound model will unbind all stickit events, then rebind it (this gives you flexibility to re-render).
 
 ```javascript  
   render: function() {
@@ -55,10 +55,10 @@ Uses `view.bindings` or the given bindings, and `this.model` or the given model,
   }
 ```
 
-### unstickModel
-`view.unstickModel(optionalModel)`
+### unstickit
+`view.unstickit(optionalModel)`
 
-Removes event bindings from all models, or (only) the given model, used by stickit in the view. Removing model events will be taken care of in `view.remove()`, but if you want to unbind a model early, use this.
+Removes event bindings from all models. Optionally, a model can be passed in which will remove events for the given model and its corresponding bindings configuration only. Unbinding will be taken care of automatically in `view.remove()`, but if you want to unbind early, use this.
 
 ## Bindings
 
@@ -81,7 +81,7 @@ Note, binding to multiple model attributes using an array configuration only app
     // Bind to multiple model attributes
     '#header': {
       observe: ['title', 'author'],
-      onGet: function(values, attrNames) {
+      onGet: function(values) {
         // onGet called after title *or* author model attributes change.
         return values[0] + ', by ' + values[1];
       }
@@ -97,7 +97,8 @@ A special selector value that binds to the view delegate (view.$el).
   tagName: 'form',
   bindings: {
     ':el': {
-      submit: function($el, event) { /* ... */ }
+      observe: 'title'
+      onGet: function(value) { /* ... */ }
     }
   }
 ```
@@ -113,8 +114,8 @@ A callback which returns a formatted version of the model attribute value that i
       onGet: 'formatHeader'
     }
   },
-  formatHeader: function(val, attrName) {
-    return attrName + ': ' + val;
+  formatHeader: function(value, options) {
+    return options.observe + ': ' + val;
   }
  ```
 
@@ -129,7 +130,7 @@ A callback which prepares a formatted version of the view value before setting i
       onSet: 'addByline'
     }
   },
-  addByline: function(val, attrName) {
+  addByline: function(val, options) {
     return 'by ' + val;
   }
 ```
@@ -145,7 +146,7 @@ A boolean value or a function that returns a boolean value which controls whethe
       updateModel: 'confirmFormat'
     }
   },
-  confirmFormat: function(val, attrName) {
+  confirmFormat: function(val, options) {
     // Only update the title attribute if the value starts with "by".
     return val.startsWith('by ');
   }
@@ -167,7 +168,7 @@ bindings: {
 
 ### afterUpdate
 
-A string function reference or function which is called after a value is updated in the dom.
+Called after a value is updated in the dom.
 
 ```javascript  
   bindings: {
@@ -176,7 +177,7 @@ A string function reference or function which is called after a value is updated
       afterUpdate: 'highlight'
     }
   },
-  highlight: function($el, val) {
+  highlight: function($el, val, originalVal, options) {
     $el.fadeOut(500, function() { $(this).fadeIn(500); });
   }
 ```
@@ -228,7 +229,7 @@ If more than the standard jQuery show/hide is required, then you can manually ta
   bindings: {
     '#title': {
       observe: 'title',
-      visible: function(val, attrName) { return val == 'Mille Plateaux'; }
+      visible: function(val, options) { return val == 'Mille Plateaux'; }
     }
   }
 ```
@@ -241,7 +242,7 @@ If more than the standard jQuery show/hide is required, then you can manually ta
       visibleFn: 'slideFast'
     }
   },
-  slideFast: function($el, isVisible, attrName) {
+  slideFast: function($el, isVisible, options) {
     if (isVisible) $el.slideDown('fast');
     else $el.slideUp('fast');
   }
@@ -267,7 +268,7 @@ The following is a list of the supported form elements, their binding details, a
    - see the `selectOptions` configuration
    - `change` event is used for handling
 
-### eventsOverride
+### events
 
 Specify a list of events which will override stickit's default events for a form element. Bound events control when the model is updated with changes in the view element.
 
@@ -278,7 +279,7 @@ Specify a list of events which will override stickit's default events for a form
       // Normally, stickit would bind `keyup`, `change`, `cut`, and `paste` events
       // to an input:text element. The following will override these events and only 
       // update/set the model after the input#title element is blur'ed.
-      eventsOverride: ['blur']
+      events: ['blur']
     }
   }
 ```
@@ -291,7 +292,9 @@ Binds an object collection, html select box, and a model attribute value. The fo
  - `labelPath`: the path to the label value for select options within the collection of objects. Default value when undefined is `label`.
  - `valuePath`: the path to the values for select options within the collection of objects. When an options is selected, the value that is defined for the given option is set in the model. Leave this undefined if the whole object is the value or to use the default `value`.
 
-When bindings are initialized, Stickit will build the `select` element with the options and bindings configured. 
+When bindings are initialized, Stickit will build the `select` element with the options and bindings configured.
+
+**Note:** if you are using Zepto and referencing object values for your select options, like in the second example, then you will need to also include the Zepto data module.
 
 The following example references a collection of stooges at `window.app.stooges` and uses the `age` attribute for labels and the `name` attribute for option values:  
 
@@ -360,11 +363,11 @@ Finally, multiselects are supported if the select element contains the [multiple
 bindings: {
   '#books': {
     observe: 'books',
-    onGet: function(val, attr) {
+    onGet: function(val) {
       // Return an array of the ids so that stickit can match them to select options.
       return _.map(val.split('-'), Number);
     },
-    onSet: function(vals, attr) {
+    onSet: function(vals) {
       // Format the array of ids into a dash-delimited String before setting.
       return vals.join('-');
     },
@@ -413,10 +416,41 @@ Binds element attributes and properties with observed model attributes, using th
       }]
     }
   },
-  formatWings: function(val, attrName) {
+  formatWings: function(val) {
     return val ? 'has-wings' : 'no-wings';
   }
  ```
+
+## Custom Handlers
+
+### addHandler
+`Backbone.Stickit.addHandler(handler_s)`
+
+Adds the given handler or array of handlers to Stickit. A handler is a binding configuration, with an additional `selector` key, that is used to customize or override any of Stickit's default binding handling. To derive a binding configuration, the `selector`s are used to match against a bound element, and any matching handlers  are mixed/extended in the order that they were added. 
+
+Internally, Stickit uses `addHandler` to add configuration for its default handling. For example, the following is the internal handler that matches against `textarea` elements:
+
+```javascript
+Backbone.Stickit.addHandler({
+  selector: 'textarea',
+  events: ['keyup', 'change', 'paste', 'cut'],
+  update: function($el, val) { $el.val(val); },
+  getVal: function($el) { return $el.val(); }
+})
+
+```
+Except for the `selector`, those keys should look familiar since they belong to the binding configuration api. If unspecified, the following keys are defaulted for handlers: `updateModel:true`, `updateView:true`, `updateMethod:'text'`.
+
+By adding your own `selector:'textarea'` handler, you can override any or all of Stickit's default `textarea` handling. Since binding configurations are derived from handlers with matching selectors, another customization trick would be to add a handler that matches textareas with a specific class name. For example:
+
+```javascript
+Backbone.Stickit.addHandler({
+  selector: 'textarea.trim',
+  getVal: function($el) { return $.trim($el.val()); }
+})
+
+```
+With this handler in place, anytime you bind to a `textarea`, if the `textarea` contains a `trim` class then this handler will be mixed into the default `textarea` handler and `getVal` will be overridden.
 
 ## F.A.Q.
 
@@ -424,17 +458,44 @@ Binds element attributes and properties with observed model attributes, using th
 
 JavaScript frameworks seem to be headed in the wrong direction - controller callbacks/directives, configuration, and special tags are being forced into the template/presentation layer. Who wants to program and debug templates? 
 
-If you are writing a custom frontend, then you're going to need to write custom JavaScript. Backbone helps you organize with a strong focus on the model/data, but stays the hell out of your presentation. Where most frameworks or other Backbone plugins muck up the presentation layer with obtrusive JavaScript, stickit defines configuration and callbacks in the place that they should be - in the view/controller/JavaScript.
+If you are writing a custom frontend, then you're going to need to write custom JavaScript. Backbone helps you organize with a strong focus on the model, but stays the hell out of your presentation. Configuration and callbacks should only be in one place - the View/JavaScript.
 
 ### Dependencies
 
- Backbone 0.9, underscore.js, and jQuery or Zepto
+ Backbone 0.9, underscore.js, and jQuery or Zepto (with data module; see `selectOptions`)
 
 ### License
 
 MIT
 
 ## Change Log
+
+#### Master
+
+- Added `Backbone.Stickit.addHandler()`, useful for defining a custom configuration for any bindings that match the `handler.selector`. 
+- **Breaking Change**: `eventsOverride` was changed to `events`.
+- **Breaking Change**: replaced `unstickModel` with `unstickit`.
+- Fixed a bug introduced in 0.6.2 where re-rendering/re-sticking wasn't unbinding view events [#66](https://github.com/NYTimes/backbone.stickit/issues/66).
+- Added `update` to the bindings api which is an override for handling how the View element gets updated with Model changes.
+- Added `getVal` to the bindings api which is an override for retrieving the value of the View element. 
+
+#### 0.6.2
+
+- **Breaking Change**: Changed the last parameter from the model attribute name to the bindings hash in most of the binding callbacks. Note the model attribute name can still be gleaned from the bindings hash - `options.observe`. The following are the callbacks that were affected and their parameters (`options` are the bindings hash):  
+    `onGet(value, options)`  
+    `onSet(value, options)`  
+    `updateModel(value, options)`  
+    `updateView(value, options)`  
+    `afterUpdate($el, value, originalVal, options)`  
+    `visible(value, options)`  
+    `visibleFn($el, isVisible, options)`  
+- Added support for handling multiple checkboxes with one binding/selector and using the `value` attribute, if present, for checkboxes.
+- Added default values for `labelPath` and `valuePath` in selectOptions: `label` and `value` respectively.
+- Refactored event registration to use `$.on` and `$.off` instead of delegating through Backbone which fixed the following bugs:
+    - `view.events` selectors and binding selectors that are equal were overriding [#49](https://github.com/NYTimes/backbone.stickit/issues/49)
+    - `view.events` declared as a function was not supported [#51](https://github.com/NYTimes/backbone.stickit/pull/51)
+- Fixed some bugs and added support requirements for zepto.js; [#58](https://github.com/NYTimes/backbone.stickit/pull/58).
+- Bug Fixes: [#38](https://github.com/NYTimes/backbone.stickit/pull/38), [#42](https://github.com/NYTimes/backbone.stickit/pull/42), 
 
 #### 0.6.1
 
